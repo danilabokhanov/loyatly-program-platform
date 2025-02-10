@@ -1,0 +1,97 @@
+@startuml
+
+entity "UserInfo" {
+    * id : uuid [PK]
+    --
+    email : string
+    phone_number : string
+    first_name : string
+    second_name : string
+    is_company: boolean
+}
+
+entity "UserCredentials" {
+    * login : string [PK]
+    --
+    password : string
+    user_id : string [FK -> UserInfo.id]
+}
+
+entity "UserJwt" {
+    * jwt_token : string [PK]
+    --
+    user_id : string [FK -> UserInfo.id]
+}
+
+UserInfo }|..|| UserCredentials : "User id"
+UserInfo }|..|| UserJwt : "User id"
+
+
+entity Promo #lightcoral {
+    *id : uuid
+    --
+    title : text
+    description : text
+    category_id : uuid
+    author_id : uuid
+}
+
+entity Category #lightcoral {
+    *id : uuid
+    --
+    name : text
+}
+
+entity Comment #lightcoral {
+    *id : uuid
+    --
+    text : text
+    parent_comment : uuid
+    promo_id : uuid
+    author_id : uuid
+}
+
+entity ViewsList #lightcoral {
+    *id : uuid
+    --
+    user_id : uuid
+    promo_id : uuid
+    is_liked : boolean
+}
+
+Promo }|..|| Category : "Category id"
+Comment }|..|| Promo : "Promo id"
+ViewsList }|..|| Promo : "Promo id"
+
+entity Comments #lightblue {
+    promo_id: UUID [PK1]
+    promo_author: UUID [PK2]
+    --
+    user_id: UUID
+    promo_category: UUID
+    is_deletion: Bool
+    is_company: Bool
+    dat_time: DateTime64
+}
+
+entity Likes #lightblue {
+    promo_id: UUID [PK1]
+    user_id: UUID [PK2]
+    --
+    promo_category: UUID
+    is_company: Bool
+    date_time: DateTime64
+    is_deletion: Bool
+}
+
+entity Views #lightblue {
+    promo_id: UUID [PK1]
+    user_id: UUID [PK2]
+    --
+    promo_category: UUID
+    is_company: Bool
+    date_time: DateTime64
+}
+
+
+@enduml
