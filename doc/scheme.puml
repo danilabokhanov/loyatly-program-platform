@@ -57,6 +57,7 @@ entity ViewsList #lightcoral {
     user_id : uuid
     promo_id : uuid
     is_liked : boolean
+    date_time: date
 }
 
 Promo }|..|| Category : "Category id"
@@ -71,7 +72,7 @@ entity Comments #lightblue {
     promo_category: UUID
     is_deletion: Bool
     is_company: Bool
-    dat_time: DateTime64
+    date_time: DateTime64
 }
 
 entity Likes #lightblue {
