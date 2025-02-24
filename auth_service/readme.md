@@ -11,3 +11,5 @@ namely ```login``` (Real company name if it is a business account), ```password`
 - ```/api/v1/login``` - User sends their login and password. Auth service returns jwt token.
 
 - ```/api/v1/get_user_info``` - get users' public data by ids list
+
+- ```/api/v1/validate``` - accepts

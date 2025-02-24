@@ -1,0 +1,221 @@
+openapi: 3.0.0
+info:
+  title: User service API
+  description: API for user registration, authentication, and profile management
+  version: 1.0.0
+
+
+paths:
+  /api/v1/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login
+                - password
+                - email
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                email:
+                  type: string
+                  format: email
+                is_company:
+                  type: boolean
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid input data
+        500:
+          description: Internal server error
+
+  /api/v1/login:
+    post:
+      summary: Authenticate user and return JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login
+                - password
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        200:
+          description: Authentication successful, JWT set in cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "Authorization=jwt_token; HttpOnly; Secure; Path=/"
+        401:
+          description: Unauthorized
+        404:
+          description: Bad request
+        500:
+          description: Internal server error
+  /api/v1/profile:
+    get:
+      summary: Get user profile
+      parameters:
+        - name: jwt
+          in: cookie
+          description: JWT token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User profile information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+        404:
+          description: Bad request
+        500:
+          description: Internal server error
+    post:
+      summary: Update user profile
+      parameters:
+        - name: jwt
+          in: cookie
+          description: JWT token for authentication
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        200:
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+        404:
+          description: Bad request
+        500:
+          description: Internal server error
+  /api/v1/user/{id}:
+    get:
+      summary: Get public information about a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Public user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        400:
+          description: Bad request
+        404:
+          description: User not found
+        500:
+          description: Internal server error
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        second_name:
+          type: string
+        birth_date:
+          type: string
+          format: date-time
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        is_company:
+          type: boolean
+        creation_date:
+          type: string
+          format: date-time
+        update_date:
+          type: string
+          format: date-time
+        login:
+          type: string
+    UserUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        second_name:
+          type: string
+        birth_date:
+          type: string
+          format: date-time
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+    UserPublic:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        is_company:
+          type: boolean
+        login:
+          type: string
+    JWTToken:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        iss:
+          type: string
+          example: "auth-service"
+        exp:
+          type: integer
+          format: int64
+          description: Expiration time (Unix timestamp)
+        iat:
+          type: integer
+          format: int64
+          description: Issued at time (Unix timestamp)

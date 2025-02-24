@@ -3,17 +3,20 @@
 entity "UserInfo" {
     * id : uuid [PK]
     --
-    email : string
-    phone_number : string
     first_name : string
     second_name : string
+    birth_date: date
+    email : string
+    phone_number : string
     is_company: boolean
+    creation_date: time
+    update_date: time
 }
 
 entity "UserCredentials" {
     * login : string [PK]
     --
-    password : string
+    password : bytea
     user_id : string [FK -> UserInfo.id]
 }
 
@@ -23,9 +26,8 @@ entity "UserJwt" {
     user_id : string [FK -> UserInfo.id]
 }
 
-UserInfo }|..|| UserCredentials : "User id"
-UserInfo }|..|| UserJwt : "User id"
-
+UserCredentials }|..|| UserInfo : "User id"
+UserJwt }|..|| UserInfo : "User id"
 
 entity Promo #lightcoral {
     *id : uuid
@@ -49,20 +51,11 @@ entity Comment #lightcoral {
     parent_comment : uuid
     promo_id : uuid
     author_id : uuid
-}
-
-entity ViewsList #lightcoral {
-    *id : uuid
-    --
-    user_id : uuid
-    promo_id : uuid
-    is_liked : boolean
-    date_time: date
+    is_hidden: boolean
 }
 
 Promo }|..|| Category : "Category id"
 Comment }|..|| Promo : "Promo id"
-ViewsList }|..|| Promo : "Promo id"
 
 entity Comments #lightblue {
     promo_id: UUID [PK1]

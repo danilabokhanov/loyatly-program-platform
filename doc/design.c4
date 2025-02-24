@@ -58,14 +58,15 @@ model {
     }
 
     user -> loyaltySystem.gateway "User requests" "HTTPS+JSON"
-    loyaltySystem.gateway -> loyaltySystem.authService
-    loyaltySystem.authService -> loyaltySystem.postgreSQL "Auth info db requests"
+    loyaltySystem.gateway -> loyaltySystem.authService "User info requests" "HTTPS+JSON"
+    loyaltySystem.authService -> loyaltySystem.postgreSQL "User db requests"
     loyaltySystem.gateway -> loyaltySystem.statsService "Statistics read request" "HTTPS+JSON"
     loyaltySystem.statsService -> loyaltySystem.clickHouse "Statistics info db requests"
-    loyaltySystem.gateway -> loyaltySystem.loyaltyService "Loyalty service requests" "TTPS+JSON"
+    loyaltySystem.gateway -> loyaltySystem.loyaltyService "Loyalty service requests" "HTTPS+JSON"
     loyaltySystem.loyaltyService -> loyaltySystem.cassandra "Promos info db requests"
     loyaltySystem.loyaltyService -> loyaltySystem.kafka "Statistics write requests" "Kafka"
-    loyaltySystem.kafka -> loyaltySystem.statsService "Statistics kafka messages" "Kafka"
+    loyaltySystem.kafka -> loyaltySystem.clickHouse "Statistics kafka messages" "Kafka"
+    loyaltySystem.loyaltyService -> loyaltySystem.authService
 }
 
 views {
