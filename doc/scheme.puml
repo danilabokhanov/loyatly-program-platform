@@ -20,14 +20,7 @@ entity "UserCredentials" {
     user_id : string [FK -> UserInfo.id]
 }
 
-entity "UserJwt" {
-    * jwt_token : string [PK]
-    --
-    user_id : string [FK -> UserInfo.id]
-}
-
 UserCredentials }|..|| UserInfo : "User id"
-UserJwt }|..|| UserInfo : "User id"
 
 entity Promo #lightcoral {
     *id : uuid
