@@ -16,8 +16,8 @@ import (
 
 const (
 	Md5Len         = 16
-	jwtPublicFile  = "credentials/jwt_public_key.txt"
-	jwtPrivateFile = "credentials/jwt_private_key.txt"
+	JwtPublicFile  = "credentials/jwt_public_key.txt"
+	JwtPrivateFile = "credentials/jwt_private_key.txt"
 )
 
 var (
@@ -29,11 +29,11 @@ var (
 func getJwtKeys() (*rsa.PublicKey, *rsa.PrivateKey) {
 	once.Do(func() {
 		var err error
-		private, err := os.ReadFile(jwtPrivateFile)
+		private, err := os.ReadFile(JwtPrivateFile)
 		if err != nil {
 			log.Fatalf("Error reading jwt private key: %v", err)
 		}
-		public, err := os.ReadFile(jwtPublicFile)
+		public, err := os.ReadFile(JwtPublicFile)
 		if err != nil {
 			log.Fatalf("Error reading jwt public key: %v", err)
 		}

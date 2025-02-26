@@ -1,4 +1,4 @@
-package usermodel
+package tests
 
 import (
 	"regexp"
@@ -37,31 +37,31 @@ type StorageManager interface {
 	GetUserById(userId uuid.UUID) (User, error)
 }
 
-func isValidLogin(login string) bool {
+func IsValidLogin(login string) bool {
 	return len(login) >= 6 && strings.IndexFunc(login, func(r rune) bool {
 		return r > 127
 	}) == -1
 }
 
-func isValidPassword(password string) bool {
+func IsValidPassword(password string) bool {
 	return len(password) >= 8 && strings.IndexFunc(password, unicode.IsDigit) != -1 &&
 		strings.IndexFunc(password, unicode.IsUpper) != -1
 }
 
-func isValidEmail(email string) bool {
+func IsValidEmail(email string) bool {
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	regex := regexp.MustCompile(pattern)
 	return regex.MatchString(email)
 }
 
-func isValidPhoneNumber(phoneNumber string) bool {
+func IsValidPhoneNumber(phoneNumber string) bool {
 	return phoneNumber[0] == '8' && strings.IndexFunc(phoneNumber, func(r rune) bool {
 		return !unicode.IsDigit(r)
 	}) == -1
 }
 
 func NewUser(login, email, password string, isCompany bool) *User {
-	if !isValidLogin(login) || !isValidPassword(password) {
+	if !IsValidLogin(login) || !IsValidPassword(password) {
 		return nil
 	}
 	curTime := time.Now()
@@ -85,10 +85,10 @@ func MergeUserInfo(user User, newInfo User) User {
 	if !newInfo.BirthDate.IsZero() {
 		user.BirthDate = newInfo.BirthDate
 	}
-	if newInfo.Email != "" && isValidEmail(newInfo.Email) {
+	if newInfo.Email != "" && IsValidEmail(newInfo.Email) {
 		user.Email = newInfo.Email
 	}
-	if newInfo.PhoneNumber != "" && isValidPhoneNumber(newInfo.Email) {
+	if newInfo.PhoneNumber != "" && IsValidPhoneNumber(newInfo.Email) {
 		user.PhoneNumber = newInfo.PhoneNumber
 	}
 	user.UpdateDate = curTime
