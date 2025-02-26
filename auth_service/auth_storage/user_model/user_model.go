@@ -1,6 +1,7 @@
 package usermodel
 
 import (
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -47,6 +48,18 @@ func isValidPassword(password string) bool {
 		strings.IndexFunc(password, unicode.IsUpper) != -1
 }
 
+func isValidEmail(email string) bool {
+	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	regex := regexp.MustCompile(pattern)
+	return regex.MatchString(email)
+}
+
+func isValidPhoneNumber(phoneNumber string) bool {
+	return phoneNumber[0] == '8' && strings.IndexFunc(phoneNumber, func(r rune) bool {
+		return !unicode.IsDigit(r)
+	}) == -1
+}
+
 func NewUser(login, email, password string, isCompany bool) *User {
 	if !isValidLogin(login) || !isValidPassword(password) {
 		return nil
@@ -72,10 +85,10 @@ func MergeUserInfo(user User, newInfo User) User {
 	if !newInfo.BirthDate.IsZero() {
 		user.BirthDate = newInfo.BirthDate
 	}
-	if newInfo.Email != "" {
+	if newInfo.Email != "" && isValidEmail(newInfo.Email) {
 		user.Email = newInfo.Email
 	}
-	if newInfo.PhoneNumber != "" {
+	if newInfo.PhoneNumber != "" && isValidPhoneNumber(newInfo.Email) {
 		user.PhoneNumber = newInfo.PhoneNumber
 	}
 	user.UpdateDate = curTime

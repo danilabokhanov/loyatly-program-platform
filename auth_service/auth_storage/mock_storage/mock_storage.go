@@ -73,11 +73,3 @@ func NewStorage() smimpl.Storage {
 		credentials: make(map[string]credentialsData),
 	}
 }
-
-// type Storage interface {
-// 	GetUserPasswordByLogin(login string) ([userkeys.Md5Len]byte, bool, error)
-// 	GetUserById(userId uuid.UUID) (usermodel.User, error)
-// 	GetUserByLogin(login string) (usermodel.User, error)
-// 	AddUser(user usermodel.User, login string, password [userkeys.Md5Len]byte) error
-// 	UpdateUser(user usermodel.User) error
-// }

@@ -104,7 +104,10 @@ func GenJWT(userId uuid.UUID) string {
 
 func GetPasswordHash(login string, password string) [Md5Len]byte {
 	hashGenerator := md5.New()
-	io.WriteString(hashGenerator, password+login)
+	_, err := io.WriteString(hashGenerator, password+login)
+	if err != nil {
+		log.Fatalf("Error hashing password: %v", err)
+	}
 	hash := hashGenerator.Sum(nil)
 	var buff [Md5Len]byte
 	copy(buff[:], hash)

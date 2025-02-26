@@ -22,15 +22,19 @@ func registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := storageManager.CreateUser(userCreds.Login, userCreds.Password, userCreds.Email, userCreds.IsCompany)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Could not create user: %v"), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Could not create user: %v", err), http.StatusInternalServerError)
 		return
 	}
 	if user.Login == "" {
 		http.Error(w, "Invalid credentials format or user has already exists", http.StatusBadRequest)
 		return
 	}
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
 }
 
 func loginUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,8 +82,12 @@ func getProfileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
 }
 
 func updateProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,8 +110,12 @@ func updateProfileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
 }
 
 func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -122,8 +134,12 @@ func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User not Found", http.StatusNotFound)
 		return
 	}
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
 }
 
 func NewRouter(sm usermodel.StorageManager) *chi.Mux {
