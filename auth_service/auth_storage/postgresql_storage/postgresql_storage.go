@@ -18,6 +18,8 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+const PGCredentialsPath = "credentials/postgresql.json"
+
 type UserInfo struct {
 	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	FirstName    string    `gorm:"type:varchar(255)"`
@@ -133,7 +135,7 @@ func (ps *PGStorage) UpdateUser(user usermodel.User) error {
 
 func getPostgresCreds() *PGCredentials {
 	once.Do(func() {
-		file, err := os.Open("credentials/postgresql.json")
+		file, err := os.Open(PGCredentialsPath)
 		if err != nil {
 			log.Fatalf("Error opening PostgreSQL credentials file: %v", err)
 		}
