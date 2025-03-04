@@ -1,6 +1,6 @@
 FROM golang:1.24
 
-WORKDIR /auth_service
+WORKDIR /api_gateway
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -8,6 +8,6 @@ RUN go mod download
 COPY . .
 RUN go build -o main ./cmd
 
-EXPOSE 8080
+EXPOSE 8082
 
 CMD ["./main"]
