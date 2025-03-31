@@ -1,0 +1,76 @@
+specification {
+    element person
+    element system
+    element container
+}
+
+model {
+    user = person "User"
+
+    loyaltySystem = system "Loyalty System" {
+        gateway = container "API Gateway" {
+            description "Reverse proxy"
+            technology "Nginx"
+        }
+
+        authService = container "Authentication service" {
+            description "Implements authentication logic"
+            technology "Go"
+        }
+        postgreSQL = container "PostgreSQL" {
+            description "Store authentication credentials"
+            technology "PostgreSQL"
+            style {
+                shape cylinder
+            }
+        }
+
+        statsService = container "Statistics service" {
+            description "Receive and send statistics"
+            technology "Go"
+        }
+        clickHouse = container "ClickHouse" {
+            description "Store statistics"
+            technology "ClickHouse"
+            style {
+                shape cylinder
+            }
+        }
+
+        loyaltyService = container "Loyalty service" {
+            description "Promo management"
+            technology "Go"
+        }
+        cassandra = container "Cassandra" {
+            description "Store promos information"
+            technology "ApacheCassandra"
+            style {
+                shape cylinder
+            }
+        }
+        kafka = container "Kafka" {
+            description "Message broker for statistics"
+            technology "ApacheKafka"
+            style {
+                shape queue
+            }
+        }
+    }
+
+    user -> loyaltySystem.gateway "User requests" "HTTPS+JSON"
+    loyaltySystem.gateway -> loyaltySystem.authService "User info requests" "HTTPS+JSON"
+    loyaltySystem.authService -> loyaltySystem.postgreSQL "User db requests"
+    loyaltySystem.gateway -> loyaltySystem.statsService "Statistics read request" "HTTPS+JSON"
+    loyaltySystem.statsService -> loyaltySystem.clickHouse "Statistics info db requests"
+    loyaltySystem.gateway -> loyaltySystem.loyaltyService "Loyalty service requests" "HTTPS+JSON"
+    loyaltySystem.loyaltyService -> loyaltySystem.cassandra "Promos info db requests"
+    loyaltySystem.loyaltyService -> loyaltySystem.kafka "Statistics write requests" "Kafka"
+    loyaltySystem.kafka -> loyaltySystem.clickHouse "Statistics kafka messages" "Kafka"
+    loyaltySystem.loyaltyService -> loyaltySystem.authService
+}
+
+views {
+    view index {
+        include *
+    }
+}

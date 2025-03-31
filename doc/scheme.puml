@@ -1,0 +1,84 @@
+@startuml
+
+entity "UserInfo" {
+    * id : uuid [PK]
+    --
+    first_name : string
+    second_name : string
+    birth_date: date
+    email : string
+    phone_number : string
+    is_company: boolean
+    creation_date: time
+    update_date: time
+}
+
+entity "UserCredentials" {
+    * login : string [PK]
+    --
+    password : bytea
+    user_id : string [FK -> UserInfo.id]
+}
+
+UserCredentials }|..|| UserInfo : "User id"
+
+entity Promo #lightcoral {
+    *id : uuid
+    --
+    title : text
+    description : text
+    category_id : uuid
+    author_id : uuid
+}
+
+entity Category #lightcoral {
+    *id : uuid
+    --
+    name : text
+}
+
+entity Comment #lightcoral {
+    *id : uuid
+    --
+    text : text
+    parent_comment : uuid
+    promo_id : uuid
+    author_id : uuid
+    is_hidden: boolean
+}
+
+Promo }|..|| Category : "Category id"
+Comment }|..|| Promo : "Promo id"
+
+entity Comments #lightblue {
+    promo_id: UUID [PK1]
+    promo_author: UUID [PK2]
+    --
+    user_id: UUID
+    promo_category: UUID
+    is_deletion: Bool
+    is_company: Bool
+    date_time: DateTime64
+}
+
+entity Likes #lightblue {
+    promo_id: UUID [PK1]
+    user_id: UUID [PK2]
+    --
+    promo_category: UUID
+    is_company: Bool
+    date_time: DateTime64
+    is_deletion: Bool
+}
+
+entity Views #lightblue {
+    promo_id: UUID [PK1]
+    user_id: UUID [PK2]
+    --
+    promo_category: UUID
+    is_company: Bool
+    date_time: DateTime64
+}
+
+
+@enduml
