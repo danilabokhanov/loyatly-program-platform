@@ -27,28 +27,12 @@ entity Promo #lightcoral {
     --
     title : text
     description : text
-    category_id : uuid
     author_id : uuid
+    discount_rate: double
+    promo_code: string
+    creation_date: datetime
+    update_date: datetime
 }
-
-entity Category #lightcoral {
-    *id : uuid
-    --
-    name : text
-}
-
-entity Comment #lightcoral {
-    *id : uuid
-    --
-    text : text
-    parent_comment : uuid
-    promo_id : uuid
-    author_id : uuid
-    is_hidden: boolean
-}
-
-Promo }|..|| Category : "Category id"
-Comment }|..|| Promo : "Promo id"
 
 entity Comments #lightblue {
     promo_id: UUID [PK1]

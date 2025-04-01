@@ -1,221 +1,202 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: User service API
-  description: API for user registration, authentication, and profile management
+  title: Promo Code Proxy API
+  description: API Proxy for the Promo Code Service with authentication and authorization.
   version: 1.0.0
 
+servers:
+  - url: https://api.example.com/v1
 
 paths:
-  /api/v1/register:
-    post:
-      summary: Register a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - login
-                - password
-                - email
-              properties:
-                login:
-                  type: string
-                password:
-                  type: string
-                  format: password
-                email:
-                  type: string
-                  format: email
-                is_company:
-                  type: boolean
+  /promos:
+    get:
+      summary: Get paginated list of promo codes
+      tags:
+        - Promo Codes
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      security:
+        - jwtAuth: []
+        - basicAuth: []
       responses:
-        201:
-          description: User registered successfully
+        "200":
+          description: List of promo codes
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        400:
-          description: Invalid input data
-        500:
-          description: Internal server error
+                type: array
+                items:
+                  $ref: '#/components/schemas/Promo'
 
-  /api/v1/login:
     post:
-      summary: Authenticate user and return JWT token
+      summary: Create a new promo code
+      tags:
+        - Promo Codes
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - login
-                - password
-              properties:
-                login:
-                  type: string
-                password:
-                  type: string
-                  format: password
+              $ref: '#/components/schemas/PromoCreate'
+      security:
+        - jwtAuth: []
+        - basicAuth: []
       responses:
-        200:
-          description: Authentication successful, JWT set in cookie
-          headers:
-            Set-Cookie:
-              schema:
-                type: string
-                example: "Authorization=jwt_token; HttpOnly; Secure; Path=/"
-        401:
-          description: Unauthorized
-        404:
-          description: Bad request
-        500:
-          description: Internal server error
-  /api/v1/profile:
+        "201":
+          description: Promo code created successfully
+
+  /promos/{id}:
     get:
-      summary: Get user profile
-      parameters:
-        - name: jwt
-          in: cookie
-          description: JWT token for authentication
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: User profile information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        401:
-          description: Unauthorized
-        404:
-          description: Bad request
-        500:
-          description: Internal server error
-    post:
-      summary: Update user profile
-      parameters:
-        - name: jwt
-          in: cookie
-          description: JWT token for authentication
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserUpdate'
-      responses:
-        200:
-          description: Updated user profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        401:
-          description: Unauthorized
-        404:
-          description: Bad request
-        500:
-          description: Internal server error
-  /api/v1/user/{id}:
-    get:
-      summary: Get public information about a user
+      summary: Get a promo code by ID
+      tags:
+        - Promo Codes
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
+      security:
+        - jwtAuth: []
+        - basicAuth: []
       responses:
-        200:
-          description: Public user information
+        "200":
+          description: Promo code details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPublic'
-        400:
-          description: Bad request
-        404:
-          description: User not found
-        500:
-          description: Internal server error
+                $ref: '#/components/schemas/Promo'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update an existing promo code
+      tags:
+        - Promo Codes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoUpdate'
+      security:
+        - jwtAuth: []
+        - basicAuth: []
+      responses:
+        "200":
+          description: Promo code updated successfully
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete a promo code
+      tags:
+        - Promo Codes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - jwtAuth: []
+        - basicAuth: []
+      responses:
+        "204":
+          description: Promo code deleted successfully
+        "404":
+          $ref: '#/components/responses/NotFound'
+
 components:
+  securitySchemes:
+    jwtAuth:
+      type: apiKey
+      in: cookie
+      name: jwt_token
+    basicAuth:
+      type: http
+      scheme: basic
+
+  responses:
+    BadRequest:
+      description: Bad request
+    Unauthorized:
+      description: Unauthorized
+    NotFound:
+      description: Resource not found
+
   schemas:
-    User:
+    Promo:
       type: object
       properties:
         id:
           type: string
           format: uuid
-        first_name:
+        title:
           type: string
-        second_name:
+        description:
           type: string
-        birth_date:
+        author_id:
           type: string
-          format: date-time
-        email:
+          format: uuid
+        discount_rate:
+          type: number
+        promo_code:
           type: string
-          format: email
-        phone_number:
-          type: string
-        is_company:
-          type: boolean
         creation_date:
           type: string
           format: date-time
         update_date:
           type: string
           format: date-time
-        login:
-          type: string
-    UserUpdate:
+
+    PromoCreate:
       type: object
       properties:
-        first_name:
+        title:
           type: string
-        second_name:
+        description:
           type: string
-        birth_date:
-          type: string
-          format: date-time
-        email:
-          type: string
-          format: email
-        phone_number:
-          type: string
-    UserPublic:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        is_company:
-          type: boolean
-        login:
-          type: string
-    JWTToken:
-      type: object
-      properties:
-        user_id:
+        author_id:
           type: string
           format: uuid
-        iss:
+        discount_rate:
+          type: number
+        promo_code:
           type: string
-          example: "auth-service"
-        exp:
-          type: integer
-          format: int64
-          description: Expiration time (Unix timestamp)
-        iat:
-          type: integer
-          format: int64
-          description: Issued at time (Unix timestamp)
+      required:
+        - title
+        - author_id
+        - discount_rate
+        - promo_code
+
+    PromoUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        discount_rate:
+          type: number
+      required:
+        - title
