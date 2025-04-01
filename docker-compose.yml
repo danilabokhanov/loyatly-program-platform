@@ -19,7 +19,7 @@ services:
     depends_on:
       - auth-service
   nginx:
-    image: nginx:latest
+    image: nginx:1.25.3
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -29,7 +29,7 @@ services:
     networks:
       - app-network
   postgres:
-    image: postgres:latest
+    image: postgres:16.0
     restart: always
     env_file:
       - ./auth_service/credentials/.env
@@ -45,6 +45,26 @@ services:
       retries: 3
       start_period: 5s
       timeout: 5s
+  cassandra:
+    image: cassandra:4.0
+    restart: always
+    ports:
+      - "9042:9042"
+    networks:
+      - app-network
+    environment:
+      - CASSANDRA_CLUSTER_NAME=promo-cluster
+      - CASSANDRA_NUM_TOKENS=256
+    volumes:
+      - ./cassandra_data:/var/lib/cassandra
+  loyalty-service:
+    build: ./loyalty_service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - cassandra
+    networks:
+      - app-network
 networks:
   app-network:
     driver: bridge
