@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option go_package = "/home/user/loyalty-program-platform/loyalty_service";
+
+package promo;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service PromoService {
+  rpc CreatePromo (CreatePromoRequest) returns (Promo) {}
+  rpc GetPromo (GetPromoRequest) returns (Promo) {}
+  rpc UpdatePromo (UpdatePromoRequest) returns (Promo) {}
+  rpc DeletePromo (DeletePromoRequest) returns (google.protobuf.Empty) {}
+  rpc ListPromos (ListPromosRequest) returns (ListPromosResponse) {}
+}
+
+message Promo {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string author_id = 4;
+  double discount_rate = 5;
+  string promo_code = 6;
+  google.protobuf.Timestamp creation_date = 7;
+  google.protobuf.Timestamp update_date = 8;
+}
+
+message CreatePromoRequest {
+  string title = 1;
+  string description = 2;
+  string author_id = 3;
+  double discount_rate = 4;
+  string promo_code = 5;
+}
+
+message GetPromoRequest {
+  string id = 1;
+}
+
+message UpdatePromoRequest {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  double discount_rate = 4;
+  string author_id = 5;
+  string promo_code = 6;
+}
+
+message DeletePromoRequest {
+  string id = 1;
+  string author_id = 2;
+}
+
+message ListPromosRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message ListPromosResponse {
+  repeated Promo promos = 1;
+}
