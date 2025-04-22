@@ -8,8 +8,12 @@ import (
 )
 
 func main() {
-	r := proxy.NewRouter()
-	err := http.ListenAndServe(":8082", r)
+	g, err := proxy.NewGrpcClients()
+	if err != nil {
+		log.Fatalf("Failed create grpc clients: %v\n", err)
+	}
+	r := proxy.NewRouter(g)
+	err = http.ListenAndServe(":8082", r)
 	if err != nil {
 		log.Fatalf("Failed starting server: %v\n", err)
 	}
