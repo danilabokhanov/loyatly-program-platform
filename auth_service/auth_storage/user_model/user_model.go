@@ -88,7 +88,7 @@ func MergeUserInfo(user User, newInfo User) User {
 	if newInfo.Email != "" && IsValidEmail(newInfo.Email) {
 		user.Email = newInfo.Email
 	}
-	if newInfo.PhoneNumber != "" && IsValidPhoneNumber(newInfo.Email) {
+	if newInfo.PhoneNumber != "" && IsValidPhoneNumber(newInfo.PhoneNumber) {
 		user.PhoneNumber = newInfo.PhoneNumber
 	}
 	user.UpdateDate = curTime

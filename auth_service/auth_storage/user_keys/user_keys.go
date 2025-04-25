@@ -58,7 +58,8 @@ func GetUserIdByJWT(tokenRaw string) (uuid.UUID, bool) {
 		return jwtPublic, nil
 	})
 	if err != nil {
-		log.Fatalf("Error fetching jwt token: %v", err)
+		log.Println("Error fetching jwt token: %v", err)
+		return uuid.Nil, false
 	}
 	if !token.Valid {
 		return uuid.Nil, false

@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/go-chi/chi v1.5.5
 	github.com/golang/protobuf v1.5.4
+	github.com/google/uuid v1.6.0
 	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.4
 )
