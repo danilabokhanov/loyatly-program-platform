@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option go_package = "/home/user/loyalty-program-platform/auth_service";
+
+package auth;
+
+service AuthService {
+  rpc Register (UserCreds) returns (User) {}
+  rpc Login (UserCreds) returns (LoginResponse) {}
+  rpc GetProfile (AuthRequest) returns (User) {}
+  rpc UpdateProfile (UpdateProfileRequest) returns (User) {}
+  rpc GetUserById (UserIdRequest) returns (User) {}
+}
+
+message User {
+  string id = 1;
+  string first_name = 2;
+  string second_name = 3;
+  string birth_date = 4;
+  string email = 5;
+  string phone_number = 6;
+  bool is_company = 7;
+  string creation_date = 8;
+  string update_date = 9;
+  string login = 10;
+}
+
+message UserCreds {
+  string email = 1;
+  string login = 2;
+  string password = 3;
+  bool is_company = 4;
+}
+
+message LoginResponse {
+  string jwt = 1;
+}
+
+message AuthRequest {
+  string jwt = 1;
+}
+
+message UpdateProfileRequest {
+  string jwt = 1;
+  User new_info = 2;
+}
+
+message UserIdRequest {
+  string id = 1;
+}

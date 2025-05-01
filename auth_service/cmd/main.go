@@ -4,16 +4,26 @@ import (
 	authhandlers "authservice/auth_handlers"
 	pgstorage "authservice/auth_storage/postgresql_storage"
 	smimpl "authservice/auth_storage/storage_manager"
-	"fmt"
+	protoauth "authservice/proto/auth"
 	"log"
-	"net/http"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	r := authhandlers.NewRouter(smimpl.NewStorageManager(pgstorage.NewStorage()))
-	err := http.ListenAndServe(":8080", r)
+	server := grpc.NewServer()
+	protoauth.RegisterAuthServiceServer(server, authhandlers.NewAuthServer(smimpl.NewStorageManager(pgstorage.NewStorage())))
+	reflection.Register(server)
+
+	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		log.Fatalf("Failed starting server: %v\n", err)
+		log.Fatal("Failed to listen:", err)
 	}
-	fmt.Println("Server is running ...")
+
+	log.Println("gRPC server started on :8080")
+	if err := server.Serve(listener); err != nil {
+		log.Fatal("Failed to serve:", err)
+	}
 }

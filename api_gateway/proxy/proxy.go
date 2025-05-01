@@ -1,81 +1,197 @@
 package proxy
 
 import (
-	proto "apigateway/proto"
+	kafka "apigateway/kafka_producer"
+	protoauth "apigateway/proto/auth"
+	protopromo "apigateway/proto/promo"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-const targetBase = "http://auth-service:8080"
+const targetBase = "http://nginx:8081"
+
 const promoServiceAddress = "loyalty-service:8083"
+const authServiceAddress = "auth-service:8080"
 
-func proxyHandler(w http.ResponseWriter, r *http.Request) {
-	target, err := url.Parse(targetBase + r.URL.Path)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("API GrpcClients failed: %v", err), http.StatusBadRequest)
-		return
+func grpcErrorToHTTP(err error) int {
+	st, ok := status.FromError(err)
+	if !ok {
+		return http.StatusInternalServerError
 	}
 
-	req, err := http.NewRequest(r.Method, target.String(), r.Body)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to create request: %v", err), http.StatusInternalServerError)
-		return
+	var httpStatus int
+
+	switch st.Code() {
+	case codes.InvalidArgument:
+		httpStatus = http.StatusBadRequest
+	case codes.NotFound:
+		httpStatus = http.StatusNotFound
+	case codes.AlreadyExists:
+		httpStatus = http.StatusConflict
+	case codes.PermissionDenied:
+		httpStatus = http.StatusForbidden
+	case codes.Unauthenticated:
+		httpStatus = http.StatusUnauthorized
+	case codes.Unavailable:
+		httpStatus = http.StatusServiceUnavailable
+	case codes.Internal:
+		httpStatus = http.StatusInternalServerError
+	default:
+		httpStatus = http.StatusInternalServerError
 	}
 
-	for name, values := range r.Header {
-		for _, value := range values {
-			req.Header.Add(name, value)
-		}
-	}
-
-	fmt.Println("Cookie1", r.Header.Get("Cookie"))
-	if cookies := r.Header.Get("Cookie"); cookies != "" {
-		req.Header.Set("Cookie", cookies)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error forwarding request: %v", err), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	for name, values := range resp.Header {
-		for _, value := range values {
-			w.Header().Add(name, value)
-		}
-	}
-
-	w.WriteHeader(resp.StatusCode)
-
-	fmt.Println("Cookie2", resp.Cookies())
-	for _, cookie := range resp.Cookies() {
-		http.SetCookie(w, cookie)
-	}
-
-	io.Copy(w, resp.Body)
+	return httpStatus
 }
 
 type GrpcClients struct {
-	promoClient proto.PromoServiceClient
+	authClient  protoauth.AuthServiceClient
+	promoClient protopromo.PromoServiceClient
 }
 
 func NewGrpcClients() (*GrpcClients, error) {
-	conn, err := grpc.Dial(promoServiceAddress, grpc.WithInsecure(), grpc.WithBlock())
+	connAuth, err := grpc.Dial(authServiceAddress, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to auth service: %v", err)
+	}
+	connPromo, err := grpc.Dial(promoServiceAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to promo service: %v", err)
 	}
-	return &GrpcClients{promoClient: proto.NewPromoServiceClient(conn)}, nil
+	return &GrpcClients{authClient: protoauth.NewAuthServiceClient(connAuth), promoClient: protopromo.NewPromoServiceClient(connPromo)}, nil
+}
+
+func (g *GrpcClients) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+	var userCreds protoauth.UserCreds
+	if err := json.NewDecoder(r.Body).Decode(&userCreds); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid format: %v", err), http.StatusBadRequest)
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	user, err := g.authClient.Register(ctx, &userCreds)
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+
+	kafka.SendStat("user_registered", user.Id, user.Login)
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (g *GrpcClients) loginUserHandler(w http.ResponseWriter, r *http.Request) {
+	var userCreds protoauth.UserCreds
+	if err := json.NewDecoder(r.Body).Decode(&userCreds); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid format: %v", err), http.StatusBadRequest)
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	loginResponse, err := g.authClient.Login(ctx, &userCreds)
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "Authorization",
+		Value:    loginResponse.Jwt,
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+		Expires:  time.Now().Add(72 * time.Hour),
+	})
+	w.WriteHeader(http.StatusOK)
+}
+
+func (g *GrpcClients) getProfileHandler(w http.ResponseWriter, r *http.Request) {
+	jwt, err := r.Cookie("Authorization")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	user, err := g.authClient.GetProfile(ctx, &protoauth.AuthRequest{Jwt: jwt.Value})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (g *GrpcClients) updateProfileHandler(w http.ResponseWriter, r *http.Request) {
+	jwt, err := r.Cookie("Authorization")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+	updateProfileRequest := protoauth.UpdateProfileRequest{NewInfo: &protoauth.User{}}
+	if err := json.NewDecoder(r.Body).Decode(updateProfileRequest.NewInfo); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid format: %v", err), http.StatusBadRequest)
+		return
+	}
+	updateProfileRequest.Jwt = jwt.Value
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	user, err := g.authClient.UpdateProfile(ctx, &updateProfileRequest)
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (g *GrpcClients) getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
+	userIdRaw := chi.URLParam(r, "id")
+	userId, err := uuid.Parse(userIdRaw)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Bad request: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	user, err := g.authClient.GetUserById(ctx, &protoauth.UserIdRequest{Id: userId.String()})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %v", err), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (g *GrpcClients) getUserID(r *http.Request) (string, error) {
@@ -148,7 +264,7 @@ func (g *GrpcClients) createPromoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var req proto.CreatePromoRequest
+	var req protopromo.CreatePromoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
@@ -168,7 +284,7 @@ func (g *GrpcClients) createPromoHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GrpcClients) getPromoHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := g.getUserID(r)
+	userID, err := g.getUserID(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
@@ -178,11 +294,14 @@ func (g *GrpcClients) getPromoHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	resp, err := g.promoClient.GetPromo(ctx, &proto.GetPromoRequest{Id: id})
+	resp, err := g.promoClient.GetPromo(ctx, &protopromo.GetPromoRequest{Id: id})
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Promo not found: %v", err), http.StatusNotFound)
 		return
 	}
+
+	kafka.SendStat("promo_viewed", userID, id)
+
 	json.NewEncoder(w).Encode(resp)
 }
 
@@ -193,7 +312,7 @@ func (g *GrpcClients) updatePromoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var req proto.UpdatePromoRequest
+	var req protopromo.UpdatePromoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
@@ -223,7 +342,7 @@ func (g *GrpcClients) deletePromoHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	_, err = g.promoClient.DeletePromo(ctx, &proto.DeletePromoRequest{Id: id, AuthorId: userID})
+	_, err = g.promoClient.DeletePromo(ctx, &protopromo.DeletePromoRequest{Id: id, AuthorId: userID})
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete promo: %v", err), http.StatusInternalServerError)
 		return
@@ -242,7 +361,7 @@ func (g *GrpcClients) listPromosHandler(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	resp, err := g.promoClient.ListPromos(ctx, &proto.ListPromosRequest{})
+	resp, err := g.promoClient.ListPromos(ctx, &protopromo.ListPromosRequest{})
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to list promos: %v", err), http.StatusInternalServerError)
 		return
@@ -250,19 +369,127 @@ func (g *GrpcClients) listPromosHandler(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(resp)
 }
 
+func (g *GrpcClients) addCommentHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	var req protopromo.AddCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	req.AuthorId = userID
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.AddComment(ctx, &req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to add comment: %v", err), grpcErrorToHTTP(err))
+		return
+	}
+
+	kafka.SendStat("comment_published", userID, resp.Id)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getCommentHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.GetComment(ctx, &protopromo.GetCommentRequest{CommentId: id})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Comment not found: %v", err), http.StatusNotFound)
+		return
+	}
+
+	kafka.SendStat("comment_viewed", userID, id)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) listCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	promoId := chi.URLParam(r, "promo_id")
+	page := 1
+	pageSize := 10
+	if p := r.URL.Query().Get("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if ps := r.URL.Query().Get("page_size"); ps != "" {
+		fmt.Sscanf(ps, "%d", &pageSize)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.ListComments(ctx, &protopromo.ListCommentsRequest{
+		PromoId:  promoId,
+		Page:     int32(page),
+		PageSize: int32(pageSize),
+	})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to list comments: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	for _, comment := range resp.Comments {
+		kafka.SendStat("comment_viewed", userID, comment.Id)
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) promoOnClickHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	promoId := chi.URLParam(r, "promo_id")
+
+	kafka.SendStat("promo_click", userID, promoId)
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func NewRouter(g *GrpcClients) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Post("/api/v1/register", proxyHandler)
-	r.Post("/api/v1/login", proxyHandler)
-	r.Get("/api/v1/profile", proxyHandler)
-	r.Post("/api/v1/profile", proxyHandler)
-	r.Get("/api/v1/user/{id}", proxyHandler)
+
+	r.Post("/api/v1/register", g.registerUserHandler)
+	r.Post("/api/v1/login", g.loginUserHandler)
+	r.Get("/api/v1/profile", g.getProfileHandler)
+	r.Post("/api/v1/profile", g.updateProfileHandler)
+	r.Get("/api/v1/user/{id}", g.getUserInfoHandler)
 
 	r.Post("/api/v1/promos", g.createPromoHandler)
 	r.Get("/api/v1/promos/{id}", g.getPromoHandler)
 	r.Put("/api/v1/promos/{id}", g.updatePromoHandler)
 	r.Delete("/api/v1/promos/{id}", g.deletePromoHandler)
 	r.Get("/api/v1/promos", g.listPromosHandler)
+
+	r.Post("/api/v1/comments", g.addCommentHandler)
+	r.Get("/api/v1/comments/{id}", g.getCommentHandler)
+	r.Get("/api/v1/comments/promo/{promo_id}", g.listCommentsHandler)
+
+	r.Post("/api/v1/on_click/{promo_id}", g.promoOnClickHandler)
 	return r
 }

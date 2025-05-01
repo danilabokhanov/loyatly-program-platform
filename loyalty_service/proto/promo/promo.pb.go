@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.12.4
-// source: proto/promo.proto
+// source: promo.proto
 
 package loyalty_service
 
@@ -39,7 +39,7 @@ type Promo struct {
 
 func (x *Promo) Reset() {
 	*x = Promo{}
-	mi := &file_proto_promo_proto_msgTypes[0]
+	mi := &file_promo_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -51,7 +51,7 @@ func (x *Promo) String() string {
 func (*Promo) ProtoMessage() {}
 
 func (x *Promo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[0]
+	mi := &file_promo_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -64,7 +64,7 @@ func (x *Promo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Promo.ProtoReflect.Descriptor instead.
 func (*Promo) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{0}
+	return file_promo_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Promo) GetId() string {
@@ -136,7 +136,7 @@ type CreatePromoRequest struct {
 
 func (x *CreatePromoRequest) Reset() {
 	*x = CreatePromoRequest{}
-	mi := &file_proto_promo_proto_msgTypes[1]
+	mi := &file_promo_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -148,7 +148,7 @@ func (x *CreatePromoRequest) String() string {
 func (*CreatePromoRequest) ProtoMessage() {}
 
 func (x *CreatePromoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[1]
+	mi := &file_promo_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -161,7 +161,7 @@ func (x *CreatePromoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePromoRequest.ProtoReflect.Descriptor instead.
 func (*CreatePromoRequest) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{1}
+	return file_promo_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CreatePromoRequest) GetTitle() string {
@@ -208,7 +208,7 @@ type GetPromoRequest struct {
 
 func (x *GetPromoRequest) Reset() {
 	*x = GetPromoRequest{}
-	mi := &file_proto_promo_proto_msgTypes[2]
+	mi := &file_promo_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -220,7 +220,7 @@ func (x *GetPromoRequest) String() string {
 func (*GetPromoRequest) ProtoMessage() {}
 
 func (x *GetPromoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[2]
+	mi := &file_promo_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -233,7 +233,7 @@ func (x *GetPromoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPromoRequest.ProtoReflect.Descriptor instead.
 func (*GetPromoRequest) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{2}
+	return file_promo_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GetPromoRequest) GetId() string {
@@ -257,7 +257,7 @@ type UpdatePromoRequest struct {
 
 func (x *UpdatePromoRequest) Reset() {
 	*x = UpdatePromoRequest{}
-	mi := &file_proto_promo_proto_msgTypes[3]
+	mi := &file_promo_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -269,7 +269,7 @@ func (x *UpdatePromoRequest) String() string {
 func (*UpdatePromoRequest) ProtoMessage() {}
 
 func (x *UpdatePromoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[3]
+	mi := &file_promo_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -282,7 +282,7 @@ func (x *UpdatePromoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePromoRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePromoRequest) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{3}
+	return file_promo_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UpdatePromoRequest) GetId() string {
@@ -337,7 +337,7 @@ type DeletePromoRequest struct {
 
 func (x *DeletePromoRequest) Reset() {
 	*x = DeletePromoRequest{}
-	mi := &file_proto_promo_proto_msgTypes[4]
+	mi := &file_promo_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -349,7 +349,7 @@ func (x *DeletePromoRequest) String() string {
 func (*DeletePromoRequest) ProtoMessage() {}
 
 func (x *DeletePromoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[4]
+	mi := &file_promo_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -362,7 +362,7 @@ func (x *DeletePromoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeletePromoRequest.ProtoReflect.Descriptor instead.
 func (*DeletePromoRequest) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{4}
+	return file_promo_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeletePromoRequest) GetId() string {
@@ -389,7 +389,7 @@ type ListPromosRequest struct {
 
 func (x *ListPromosRequest) Reset() {
 	*x = ListPromosRequest{}
-	mi := &file_proto_promo_proto_msgTypes[5]
+	mi := &file_promo_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -401,7 +401,7 @@ func (x *ListPromosRequest) String() string {
 func (*ListPromosRequest) ProtoMessage() {}
 
 func (x *ListPromosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[5]
+	mi := &file_promo_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -414,7 +414,7 @@ func (x *ListPromosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPromosRequest.ProtoReflect.Descriptor instead.
 func (*ListPromosRequest) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{5}
+	return file_promo_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListPromosRequest) GetPage() int32 {
@@ -440,7 +440,7 @@ type ListPromosResponse struct {
 
 func (x *ListPromosResponse) Reset() {
 	*x = ListPromosResponse{}
-	mi := &file_proto_promo_proto_msgTypes[6]
+	mi := &file_promo_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -452,7 +452,7 @@ func (x *ListPromosResponse) String() string {
 func (*ListPromosResponse) ProtoMessage() {}
 
 func (x *ListPromosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_promo_proto_msgTypes[6]
+	mi := &file_promo_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -465,7 +465,7 @@ func (x *ListPromosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPromosResponse.ProtoReflect.Descriptor instead.
 func (*ListPromosResponse) Descriptor() ([]byte, []int) {
-	return file_proto_promo_proto_rawDescGZIP(), []int{6}
+	return file_promo_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListPromosResponse) GetPromos() []*Promo {
@@ -475,11 +475,295 @@ func (x *ListPromosResponse) GetPromos() []*Promo {
 	return nil
 }
 
-var File_proto_promo_proto protoreflect.FileDescriptor
+type Comment struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	PromoId       string                 `protobuf:"bytes,2,opt,name=promo_id,json=promoId,proto3" json:"promo_id,omitempty"`
+	AuthorId      string                 `protobuf:"bytes,3,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	CreationDate  *timestamp.Timestamp   `protobuf:"bytes,5,opt,name=creation_date,json=creationDate,proto3" json:"creation_date,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
 
-const file_proto_promo_proto_rawDesc = "" +
+func (x *Comment) Reset() {
+	*x = Comment{}
+	mi := &file_promo_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Comment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Comment) ProtoMessage() {}
+
+func (x *Comment) ProtoReflect() protoreflect.Message {
+	mi := &file_promo_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Comment.ProtoReflect.Descriptor instead.
+func (*Comment) Descriptor() ([]byte, []int) {
+	return file_promo_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Comment) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Comment) GetPromoId() string {
+	if x != nil {
+		return x.PromoId
+	}
+	return ""
+}
+
+func (x *Comment) GetAuthorId() string {
+	if x != nil {
+		return x.AuthorId
+	}
+	return ""
+}
+
+func (x *Comment) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *Comment) GetCreationDate() *timestamp.Timestamp {
+	if x != nil {
+		return x.CreationDate
+	}
+	return nil
+}
+
+type AddCommentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PromoId       string                 `protobuf:"bytes,1,opt,name=promo_id,json=promoId,proto3" json:"promo_id,omitempty"`
+	AuthorId      string                 `protobuf:"bytes,2,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddCommentRequest) Reset() {
+	*x = AddCommentRequest{}
+	mi := &file_promo_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddCommentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddCommentRequest) ProtoMessage() {}
+
+func (x *AddCommentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_promo_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddCommentRequest.ProtoReflect.Descriptor instead.
+func (*AddCommentRequest) Descriptor() ([]byte, []int) {
+	return file_promo_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *AddCommentRequest) GetPromoId() string {
+	if x != nil {
+		return x.PromoId
+	}
+	return ""
+}
+
+func (x *AddCommentRequest) GetAuthorId() string {
+	if x != nil {
+		return x.AuthorId
+	}
+	return ""
+}
+
+func (x *AddCommentRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type GetCommentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommentId     string                 `protobuf:"bytes,1,opt,name=comment_id,json=commentId,proto3" json:"comment_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCommentRequest) Reset() {
+	*x = GetCommentRequest{}
+	mi := &file_promo_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCommentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCommentRequest) ProtoMessage() {}
+
+func (x *GetCommentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_promo_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCommentRequest.ProtoReflect.Descriptor instead.
+func (*GetCommentRequest) Descriptor() ([]byte, []int) {
+	return file_promo_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetCommentRequest) GetCommentId() string {
+	if x != nil {
+		return x.CommentId
+	}
+	return ""
+}
+
+type ListCommentsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PromoId       string                 `protobuf:"bytes,1,opt,name=promo_id,json=promoId,proto3" json:"promo_id,omitempty"`
+	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCommentsRequest) Reset() {
+	*x = ListCommentsRequest{}
+	mi := &file_promo_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCommentsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCommentsRequest) ProtoMessage() {}
+
+func (x *ListCommentsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_promo_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCommentsRequest.ProtoReflect.Descriptor instead.
+func (*ListCommentsRequest) Descriptor() ([]byte, []int) {
+	return file_promo_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListCommentsRequest) GetPromoId() string {
+	if x != nil {
+		return x.PromoId
+	}
+	return ""
+}
+
+func (x *ListCommentsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListCommentsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type ListCommentsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Comments      []*Comment             `protobuf:"bytes,1,rep,name=comments,proto3" json:"comments,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCommentsResponse) Reset() {
+	*x = ListCommentsResponse{}
+	mi := &file_promo_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCommentsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCommentsResponse) ProtoMessage() {}
+
+func (x *ListCommentsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_promo_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCommentsResponse.ProtoReflect.Descriptor instead.
+func (*ListCommentsResponse) Descriptor() ([]byte, []int) {
+	return file_promo_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ListCommentsResponse) GetComments() []*Comment {
+	if x != nil {
+		return x.Comments
+	}
+	return nil
+}
+
+var File_promo_proto protoreflect.FileDescriptor
+
+const file_promo_proto_rawDesc = "" +
 	"\n" +
-	"\x11proto/promo.proto\x12\x05promo\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xae\x02\n" +
+	"\vpromo.proto\x12\x05promo\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xae\x02\n" +
 	"\x05Promo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
@@ -515,80 +799,117 @@ const file_proto_promo_proto_rawDesc = "" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\":\n" +
 	"\x12ListPromosResponse\x12$\n" +
-	"\x06promos\x18\x01 \x03(\v2\f.promo.PromoR\x06promos2\xbf\x02\n" +
+	"\x06promos\x18\x01 \x03(\v2\f.promo.PromoR\x06promos\"\xac\x01\n" +
+	"\aComment\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\bpromo_id\x18\x02 \x01(\tR\apromoId\x12\x1b\n" +
+	"\tauthor_id\x18\x03 \x01(\tR\bauthorId\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x12?\n" +
+	"\rcreation_date\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\fcreationDate\"e\n" +
+	"\x11AddCommentRequest\x12\x19\n" +
+	"\bpromo_id\x18\x01 \x01(\tR\apromoId\x12\x1b\n" +
+	"\tauthor_id\x18\x02 \x01(\tR\bauthorId\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\"2\n" +
+	"\x11GetCommentRequest\x12\x1d\n" +
+	"\n" +
+	"comment_id\x18\x01 \x01(\tR\tcommentId\"a\n" +
+	"\x13ListCommentsRequest\x12\x19\n" +
+	"\bpromo_id\x18\x01 \x01(\tR\apromoId\x12\x12\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"B\n" +
+	"\x14ListCommentsResponse\x12*\n" +
+	"\bcomments\x18\x01 \x03(\v2\x0e.promo.CommentR\bcomments2\xf8\x03\n" +
 	"\fPromoService\x128\n" +
 	"\vCreatePromo\x12\x19.promo.CreatePromoRequest\x1a\f.promo.Promo\"\x00\x122\n" +
 	"\bGetPromo\x12\x16.promo.GetPromoRequest\x1a\f.promo.Promo\"\x00\x128\n" +
 	"\vUpdatePromo\x12\x19.promo.UpdatePromoRequest\x1a\f.promo.Promo\"\x00\x12B\n" +
 	"\vDeletePromo\x12\x19.promo.DeletePromoRequest\x1a\x16.google.protobuf.Empty\"\x00\x12C\n" +
 	"\n" +
-	"ListPromos\x12\x18.promo.ListPromosRequest\x1a\x19.promo.ListPromosResponse\"\x00B5Z3/home/user/loyalty-program-platform/loyalty_serviceb\x06proto3"
+	"ListPromos\x12\x18.promo.ListPromosRequest\x1a\x19.promo.ListPromosResponse\"\x00\x126\n" +
+	"\n" +
+	"AddComment\x12\x18.promo.AddCommentRequest\x1a\x0e.promo.Comment\x126\n" +
+	"\n" +
+	"GetComment\x12\x18.promo.GetCommentRequest\x1a\x0e.promo.Comment\x12G\n" +
+	"\fListComments\x12\x1a.promo.ListCommentsRequest\x1a\x1b.promo.ListCommentsResponseB5Z3/home/user/loyalty-program-platform/loyalty_serviceb\x06proto3"
 
 var (
-	file_proto_promo_proto_rawDescOnce sync.Once
-	file_proto_promo_proto_rawDescData []byte
+	file_promo_proto_rawDescOnce sync.Once
+	file_promo_proto_rawDescData []byte
 )
 
-func file_proto_promo_proto_rawDescGZIP() []byte {
-	file_proto_promo_proto_rawDescOnce.Do(func() {
-		file_proto_promo_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_promo_proto_rawDesc), len(file_proto_promo_proto_rawDesc)))
+func file_promo_proto_rawDescGZIP() []byte {
+	file_promo_proto_rawDescOnce.Do(func() {
+		file_promo_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_promo_proto_rawDesc), len(file_promo_proto_rawDesc)))
 	})
-	return file_proto_promo_proto_rawDescData
+	return file_promo_proto_rawDescData
 }
 
-var file_proto_promo_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_proto_promo_proto_goTypes = []any{
-	(*Promo)(nil),               // 0: promo.Promo
-	(*CreatePromoRequest)(nil),  // 1: promo.CreatePromoRequest
-	(*GetPromoRequest)(nil),     // 2: promo.GetPromoRequest
-	(*UpdatePromoRequest)(nil),  // 3: promo.UpdatePromoRequest
-	(*DeletePromoRequest)(nil),  // 4: promo.DeletePromoRequest
-	(*ListPromosRequest)(nil),   // 5: promo.ListPromosRequest
-	(*ListPromosResponse)(nil),  // 6: promo.ListPromosResponse
-	(*timestamp.Timestamp)(nil), // 7: google.protobuf.Timestamp
-	(*empty.Empty)(nil),         // 8: google.protobuf.Empty
+var file_promo_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_promo_proto_goTypes = []any{
+	(*Promo)(nil),                // 0: promo.Promo
+	(*CreatePromoRequest)(nil),   // 1: promo.CreatePromoRequest
+	(*GetPromoRequest)(nil),      // 2: promo.GetPromoRequest
+	(*UpdatePromoRequest)(nil),   // 3: promo.UpdatePromoRequest
+	(*DeletePromoRequest)(nil),   // 4: promo.DeletePromoRequest
+	(*ListPromosRequest)(nil),    // 5: promo.ListPromosRequest
+	(*ListPromosResponse)(nil),   // 6: promo.ListPromosResponse
+	(*Comment)(nil),              // 7: promo.Comment
+	(*AddCommentRequest)(nil),    // 8: promo.AddCommentRequest
+	(*GetCommentRequest)(nil),    // 9: promo.GetCommentRequest
+	(*ListCommentsRequest)(nil),  // 10: promo.ListCommentsRequest
+	(*ListCommentsResponse)(nil), // 11: promo.ListCommentsResponse
+	(*timestamp.Timestamp)(nil),  // 12: google.protobuf.Timestamp
+	(*empty.Empty)(nil),          // 13: google.protobuf.Empty
 }
-var file_proto_promo_proto_depIdxs = []int32{
-	7, // 0: promo.Promo.creation_date:type_name -> google.protobuf.Timestamp
-	7, // 1: promo.Promo.update_date:type_name -> google.protobuf.Timestamp
-	0, // 2: promo.ListPromosResponse.promos:type_name -> promo.Promo
-	1, // 3: promo.PromoService.CreatePromo:input_type -> promo.CreatePromoRequest
-	2, // 4: promo.PromoService.GetPromo:input_type -> promo.GetPromoRequest
-	3, // 5: promo.PromoService.UpdatePromo:input_type -> promo.UpdatePromoRequest
-	4, // 6: promo.PromoService.DeletePromo:input_type -> promo.DeletePromoRequest
-	5, // 7: promo.PromoService.ListPromos:input_type -> promo.ListPromosRequest
-	0, // 8: promo.PromoService.CreatePromo:output_type -> promo.Promo
-	0, // 9: promo.PromoService.GetPromo:output_type -> promo.Promo
-	0, // 10: promo.PromoService.UpdatePromo:output_type -> promo.Promo
-	8, // 11: promo.PromoService.DeletePromo:output_type -> google.protobuf.Empty
-	6, // 12: promo.PromoService.ListPromos:output_type -> promo.ListPromosResponse
-	8, // [8:13] is the sub-list for method output_type
-	3, // [3:8] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+var file_promo_proto_depIdxs = []int32{
+	12, // 0: promo.Promo.creation_date:type_name -> google.protobuf.Timestamp
+	12, // 1: promo.Promo.update_date:type_name -> google.protobuf.Timestamp
+	0,  // 2: promo.ListPromosResponse.promos:type_name -> promo.Promo
+	12, // 3: promo.Comment.creation_date:type_name -> google.protobuf.Timestamp
+	7,  // 4: promo.ListCommentsResponse.comments:type_name -> promo.Comment
+	1,  // 5: promo.PromoService.CreatePromo:input_type -> promo.CreatePromoRequest
+	2,  // 6: promo.PromoService.GetPromo:input_type -> promo.GetPromoRequest
+	3,  // 7: promo.PromoService.UpdatePromo:input_type -> promo.UpdatePromoRequest
+	4,  // 8: promo.PromoService.DeletePromo:input_type -> promo.DeletePromoRequest
+	5,  // 9: promo.PromoService.ListPromos:input_type -> promo.ListPromosRequest
+	8,  // 10: promo.PromoService.AddComment:input_type -> promo.AddCommentRequest
+	9,  // 11: promo.PromoService.GetComment:input_type -> promo.GetCommentRequest
+	10, // 12: promo.PromoService.ListComments:input_type -> promo.ListCommentsRequest
+	0,  // 13: promo.PromoService.CreatePromo:output_type -> promo.Promo
+	0,  // 14: promo.PromoService.GetPromo:output_type -> promo.Promo
+	0,  // 15: promo.PromoService.UpdatePromo:output_type -> promo.Promo
+	13, // 16: promo.PromoService.DeletePromo:output_type -> google.protobuf.Empty
+	6,  // 17: promo.PromoService.ListPromos:output_type -> promo.ListPromosResponse
+	7,  // 18: promo.PromoService.AddComment:output_type -> promo.Comment
+	7,  // 19: promo.PromoService.GetComment:output_type -> promo.Comment
+	11, // 20: promo.PromoService.ListComments:output_type -> promo.ListCommentsResponse
+	13, // [13:21] is the sub-list for method output_type
+	5,  // [5:13] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_proto_promo_proto_init() }
-func file_proto_promo_proto_init() {
-	if File_proto_promo_proto != nil {
+func init() { file_promo_proto_init() }
+func file_promo_proto_init() {
+	if File_promo_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_promo_proto_rawDesc), len(file_proto_promo_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_promo_proto_rawDesc), len(file_promo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_promo_proto_goTypes,
-		DependencyIndexes: file_proto_promo_proto_depIdxs,
-		MessageInfos:      file_proto_promo_proto_msgTypes,
+		GoTypes:           file_promo_proto_goTypes,
+		DependencyIndexes: file_promo_proto_depIdxs,
+		MessageInfos:      file_promo_proto_msgTypes,
 	}.Build()
-	File_proto_promo_proto = out.File
-	file_proto_promo_proto_goTypes = nil
-	file_proto_promo_proto_depIdxs = nil
+	File_promo_proto = out.File
+	file_promo_proto_goTypes = nil
+	file_promo_proto_depIdxs = nil
 }
