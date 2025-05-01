@@ -114,6 +114,85 @@ func (s *promoServer) ListPromos(ctx context.Context, req *protopromo.ListPromos
 	return &protopromo.ListPromosResponse{Promos: promos}, nil
 }
 
+func (s *promoServer) AddComment(ctx context.Context, req *protopromo.AddCommentRequest) (*protopromo.Comment, error) {
+	id := gocql.TimeUUID()
+	creationTime := time.Now()
+
+	if err := s.session.Query(
+		"INSERT INTO comments (id, promo_id, author_id, content, creation_date) VALUES (?, ?, ?, ?, ?)",
+		id, req.PromoId, req.AuthorId, req.Content, creationTime,
+	).Exec(); err != nil {
+		return nil, err
+	}
+
+	return &protopromo.Comment{
+		Id:           id.String(),
+		PromoId:      req.PromoId,
+		AuthorId:     req.AuthorId,
+		Content:      req.Content,
+		CreationDate: timestamppb.New(creationTime),
+	}, nil
+}
+
+func (s *promoServer) GetComment(ctx context.Context, req *protopromo.GetCommentRequest) (*protopromo.Comment, error) {
+	var comment protopromo.Comment
+	var creationDate time.Time
+
+	if err := s.session.Query(
+		"SELECT id, promo_id, author_id, content, creation_date FROM comments WHERE id = ?",
+		req.CommentId,
+	).Scan(&comment.Id, &comment.PromoId, &comment.AuthorId, &comment.Content, &creationDate); err != nil {
+		return nil, err
+	}
+
+	comment.CreationDate = timestamppb.New(creationDate)
+	return &comment, nil
+}
+
+func (s *promoServer) ListComments(ctx context.Context, req *protopromo.ListCommentsRequest) (*protopromo.ListCommentsResponse, error) {
+	var comments []*protopromo.Comment
+	var pageState []byte
+
+	for i := 0; i < int(req.Page); i++ {
+		iter := s.session.Query(
+			"SELECT id, promo_id, author_id, content, creation_date FROM comments WHERE promo_id = ?",
+			req.PromoId,
+		).PageSize(int(req.PageSize)).PageState(pageState).Iter()
+
+		for iter.Scan(new(string), new(string), new(string), new(string), new(time.Time)) {
+		}
+		if err := iter.Close(); err != nil {
+			return nil, err
+		}
+		pageState = iter.PageState()
+	}
+
+	iter := s.session.Query(
+		"SELECT id, promo_id, author_id, content, creation_date FROM comments WHERE promo_id = ?",
+		req.PromoId,
+	).PageSize(int(req.PageSize)).PageState(pageState).Iter()
+
+	var creationDate time.Time
+	var c protopromo.Comment
+	for iter.Scan(&c.Id, &c.PromoId, &c.AuthorId, &c.Content, &creationDate) {
+		c.CreationDate = timestamppb.New(creationDate)
+		comments = append(comments, &protopromo.Comment{
+			Id:           c.Id,
+			PromoId:      c.PromoId,
+			AuthorId:     c.AuthorId,
+			Content:      c.Content,
+			CreationDate: c.CreationDate,
+		})
+	}
+	if err := iter.Close(); err != nil {
+		return nil, err
+	}
+
+	return &protopromo.ListCommentsResponse{
+		Comments: comments,
+	}, nil
+}
+
 func connectToCassandra(host string, port int, keyspace string) *gocql.Session {
 	cluster := gocql.NewCluster(host)
 	cluster.Port = port
@@ -124,7 +203,7 @@ func connectToCassandra(host string, port int, keyspace string) *gocql.Session {
 	var session *gocql.Session
 	var err error
 
-	maxRetries := 10
+	maxRetries := 15
 	retryCount := 0
 
 	for retryCount < maxRetries {
@@ -196,7 +275,7 @@ func connectToCassandra(host string, port int, keyspace string) *gocql.Session {
 }
 
 func initializeDatabase(session *gocql.Session) {
-	query := `CREATE TABLE IF NOT EXISTS promos (
+	queries := []string{`CREATE TABLE IF NOT EXISTS promos (
 		id UUID PRIMARY KEY,
 		title TEXT,
 		description TEXT,
@@ -205,9 +284,21 @@ func initializeDatabase(session *gocql.Session) {
 		promo_code TEXT,
 		creation_date TIMESTAMP,
 		update_date TIMESTAMP
-	)`
-	if err := session.Query(query).Exec(); err != nil {
-		log.Fatal("Failed to initialize database:", err)
+	)`,
+		`CREATE TABLE IF NOT EXISTS comments (
+		id UUID,
+		promo_id UUID,
+		author_id UUID,
+		content TEXT,
+		creation_date TIMESTAMP,
+		PRIMARY KEY (promo_id, id)
+	)`,
+		`CREATE INDEX IF NOT EXISTS comments_id_idx ON comments (id)`}
+
+	for _, query := range queries {
+		if err := session.Query(query).Exec(); err != nil {
+			log.Fatal("Failed to initialize database:", err)
+		}
 	}
 }
 

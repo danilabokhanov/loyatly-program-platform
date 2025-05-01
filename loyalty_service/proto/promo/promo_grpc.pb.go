@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: proto/promo.proto
+// source: promo.proto
 
 package loyalty_service
 
@@ -20,11 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PromoService_CreatePromo_FullMethodName = "/promo.PromoService/CreatePromo"
-	PromoService_GetPromo_FullMethodName    = "/promo.PromoService/GetPromo"
-	PromoService_UpdatePromo_FullMethodName = "/promo.PromoService/UpdatePromo"
-	PromoService_DeletePromo_FullMethodName = "/promo.PromoService/DeletePromo"
-	PromoService_ListPromos_FullMethodName  = "/promo.PromoService/ListPromos"
+	PromoService_CreatePromo_FullMethodName  = "/promo.PromoService/CreatePromo"
+	PromoService_GetPromo_FullMethodName     = "/promo.PromoService/GetPromo"
+	PromoService_UpdatePromo_FullMethodName  = "/promo.PromoService/UpdatePromo"
+	PromoService_DeletePromo_FullMethodName  = "/promo.PromoService/DeletePromo"
+	PromoService_ListPromos_FullMethodName   = "/promo.PromoService/ListPromos"
+	PromoService_AddComment_FullMethodName   = "/promo.PromoService/AddComment"
+	PromoService_GetComment_FullMethodName   = "/promo.PromoService/GetComment"
+	PromoService_ListComments_FullMethodName = "/promo.PromoService/ListComments"
 )
 
 // PromoServiceClient is the client API for PromoService service.
@@ -36,6 +39,9 @@ type PromoServiceClient interface {
 	UpdatePromo(ctx context.Context, in *UpdatePromoRequest, opts ...grpc.CallOption) (*Promo, error)
 	DeletePromo(ctx context.Context, in *DeletePromoRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	ListPromos(ctx context.Context, in *ListPromosRequest, opts ...grpc.CallOption) (*ListPromosResponse, error)
+	AddComment(ctx context.Context, in *AddCommentRequest, opts ...grpc.CallOption) (*Comment, error)
+	GetComment(ctx context.Context, in *GetCommentRequest, opts ...grpc.CallOption) (*Comment, error)
+	ListComments(ctx context.Context, in *ListCommentsRequest, opts ...grpc.CallOption) (*ListCommentsResponse, error)
 }
 
 type promoServiceClient struct {
@@ -96,6 +102,36 @@ func (c *promoServiceClient) ListPromos(ctx context.Context, in *ListPromosReque
 	return out, nil
 }
 
+func (c *promoServiceClient) AddComment(ctx context.Context, in *AddCommentRequest, opts ...grpc.CallOption) (*Comment, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Comment)
+	err := c.cc.Invoke(ctx, PromoService_AddComment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *promoServiceClient) GetComment(ctx context.Context, in *GetCommentRequest, opts ...grpc.CallOption) (*Comment, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Comment)
+	err := c.cc.Invoke(ctx, PromoService_GetComment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *promoServiceClient) ListComments(ctx context.Context, in *ListCommentsRequest, opts ...grpc.CallOption) (*ListCommentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListCommentsResponse)
+	err := c.cc.Invoke(ctx, PromoService_ListComments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PromoServiceServer is the server API for PromoService service.
 // All implementations must embed UnimplementedPromoServiceServer
 // for forward compatibility.
@@ -105,6 +141,9 @@ type PromoServiceServer interface {
 	UpdatePromo(context.Context, *UpdatePromoRequest) (*Promo, error)
 	DeletePromo(context.Context, *DeletePromoRequest) (*empty.Empty, error)
 	ListPromos(context.Context, *ListPromosRequest) (*ListPromosResponse, error)
+	AddComment(context.Context, *AddCommentRequest) (*Comment, error)
+	GetComment(context.Context, *GetCommentRequest) (*Comment, error)
+	ListComments(context.Context, *ListCommentsRequest) (*ListCommentsResponse, error)
 	mustEmbedUnimplementedPromoServiceServer()
 }
 
@@ -129,6 +168,15 @@ func (UnimplementedPromoServiceServer) DeletePromo(context.Context, *DeletePromo
 }
 func (UnimplementedPromoServiceServer) ListPromos(context.Context, *ListPromosRequest) (*ListPromosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPromos not implemented")
+}
+func (UnimplementedPromoServiceServer) AddComment(context.Context, *AddCommentRequest) (*Comment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddComment not implemented")
+}
+func (UnimplementedPromoServiceServer) GetComment(context.Context, *GetCommentRequest) (*Comment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetComment not implemented")
+}
+func (UnimplementedPromoServiceServer) ListComments(context.Context, *ListCommentsRequest) (*ListCommentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListComments not implemented")
 }
 func (UnimplementedPromoServiceServer) mustEmbedUnimplementedPromoServiceServer() {}
 func (UnimplementedPromoServiceServer) testEmbeddedByValue()                      {}
@@ -241,6 +289,60 @@ func _PromoService_ListPromos_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PromoService_AddComment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddCommentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PromoServiceServer).AddComment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PromoService_AddComment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PromoServiceServer).AddComment(ctx, req.(*AddCommentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PromoService_GetComment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCommentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PromoServiceServer).GetComment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PromoService_GetComment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PromoServiceServer).GetComment(ctx, req.(*GetCommentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PromoService_ListComments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCommentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PromoServiceServer).ListComments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PromoService_ListComments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PromoServiceServer).ListComments(ctx, req.(*ListCommentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PromoService_ServiceDesc is the grpc.ServiceDesc for PromoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -268,7 +370,19 @@ var PromoService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListPromos",
 			Handler:    _PromoService_ListPromos_Handler,
 		},
+		{
+			MethodName: "AddComment",
+			Handler:    _PromoService_AddComment_Handler,
+		},
+		{
+			MethodName: "GetComment",
+			Handler:    _PromoService_GetComment_Handler,
+		},
+		{
+			MethodName: "ListComments",
+			Handler:    _PromoService_ListComments_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/promo.proto",
+	Metadata: "promo.proto",
 }

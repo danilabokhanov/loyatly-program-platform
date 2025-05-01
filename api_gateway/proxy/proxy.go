@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	kafka "apigateway/kafka_producer"
 	protoauth "apigateway/proto/auth"
 	protopromo "apigateway/proto/promo"
 	"bytes"
@@ -19,7 +20,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const targetBase = "http://auth-service:8080"
+const targetBase = "http://nginx:8081"
 
 const promoServiceAddress = "loyalty-service:8083"
 const authServiceAddress = "auth-service:8080"
@@ -79,11 +80,14 @@ func (g *GrpcClients) registerUserHandler(w http.ResponseWriter, r *http.Request
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	_, err := g.authClient.Register(ctx, &userCreds)
+	user, err := g.authClient.Register(ctx, &userCreds)
 	if err != nil {
 		http.Error(w, err.Error(), grpcErrorToHTTP(err))
 		return
 	}
+
+	kafka.SendStat("user_registered", user.Id, user.Login)
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -280,7 +284,7 @@ func (g *GrpcClients) createPromoHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GrpcClients) getPromoHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := g.getUserID(r)
+	userID, err := g.getUserID(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
@@ -295,6 +299,9 @@ func (g *GrpcClients) getPromoHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Promo not found: %v", err), http.StatusNotFound)
 		return
 	}
+
+	kafka.SendStat("promo_viewed", userID, id)
+
 	json.NewEncoder(w).Encode(resp)
 }
 
@@ -362,6 +369,107 @@ func (g *GrpcClients) listPromosHandler(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(resp)
 }
 
+func (g *GrpcClients) addCommentHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	var req protopromo.AddCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	req.AuthorId = userID
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.AddComment(ctx, &req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to add comment: %v", err), grpcErrorToHTTP(err))
+		return
+	}
+
+	kafka.SendStat("comment_published", userID, resp.Id)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getCommentHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.GetComment(ctx, &protopromo.GetCommentRequest{CommentId: id})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Comment not found: %v", err), http.StatusNotFound)
+		return
+	}
+
+	kafka.SendStat("comment_viewed", userID, id)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) listCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	promoId := chi.URLParam(r, "promo_id")
+	page := 1
+	pageSize := 10
+	if p := r.URL.Query().Get("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if ps := r.URL.Query().Get("page_size"); ps != "" {
+		fmt.Sscanf(ps, "%d", &pageSize)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.ListComments(ctx, &protopromo.ListCommentsRequest{
+		PromoId:  promoId,
+		Page:     int32(page),
+		PageSize: int32(pageSize),
+	})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to list comments: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	for _, comment := range resp.Comments {
+		kafka.SendStat("comment_viewed", userID, comment.Id)
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) promoOnClickHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	promoId := chi.URLParam(r, "promo_id")
+
+	kafka.SendStat("promo_click", userID, promoId)
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func NewRouter(g *GrpcClients) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -377,5 +485,11 @@ func NewRouter(g *GrpcClients) *chi.Mux {
 	r.Put("/api/v1/promos/{id}", g.updatePromoHandler)
 	r.Delete("/api/v1/promos/{id}", g.deletePromoHandler)
 	r.Get("/api/v1/promos", g.listPromosHandler)
+
+	r.Post("/api/v1/comments", g.addCommentHandler)
+	r.Get("/api/v1/comments/{id}", g.getCommentHandler)
+	r.Get("/api/v1/comments/promo/{promo_id}", g.listCommentsHandler)
+
+	r.Post("/api/v1/on_click/{promo_id}", g.promoOnClickHandler)
 	return r
 }
