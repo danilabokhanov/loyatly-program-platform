@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	proto "loyaltyservice/proto"
+	protopromo "loyaltyservice/proto/promo"
 	"net"
 	"time"
 
@@ -16,11 +16,11 @@ import (
 )
 
 type promoServer struct {
-	proto.UnimplementedPromoServiceServer
+	protopromo.UnimplementedPromoServiceServer
 	session *gocql.Session
 }
 
-func (s *promoServer) CreatePromo(ctx context.Context, req *proto.CreatePromoRequest) (*proto.Promo, error) {
+func (s *promoServer) CreatePromo(ctx context.Context, req *protopromo.CreatePromoRequest) (*protopromo.Promo, error) {
 	id := gocql.TimeUUID()
 	creationTime := time.Now()
 	if err := s.session.Query(
@@ -29,7 +29,7 @@ func (s *promoServer) CreatePromo(ctx context.Context, req *proto.CreatePromoReq
 	).Exec(); err != nil {
 		return nil, err
 	}
-	return &proto.Promo{
+	return &protopromo.Promo{
 		Id:           id.String(),
 		Title:        req.Title,
 		Description:  req.Description,
@@ -41,8 +41,8 @@ func (s *promoServer) CreatePromo(ctx context.Context, req *proto.CreatePromoReq
 	}, nil
 }
 
-func (s *promoServer) GetPromo(ctx context.Context, req *proto.GetPromoRequest) (*proto.Promo, error) {
-	var p proto.Promo
+func (s *promoServer) GetPromo(ctx context.Context, req *protopromo.GetPromoRequest) (*protopromo.Promo, error) {
+	var p protopromo.Promo
 	var creationDate, updateDate time.Time
 	if err := s.session.Query(
 		"SELECT id, title, description, author_id, discount_rate, promo_code, creation_date, update_date FROM promos WHERE id = ? LIMIT 1",
@@ -55,7 +55,7 @@ func (s *promoServer) GetPromo(ctx context.Context, req *proto.GetPromoRequest) 
 	return &p, nil
 }
 
-func (s *promoServer) UpdatePromo(ctx context.Context, req *proto.UpdatePromoRequest) (*proto.Promo, error) {
+func (s *promoServer) UpdatePromo(ctx context.Context, req *protopromo.UpdatePromoRequest) (*protopromo.Promo, error) {
 	var authorId string
 	err := s.session.Query("SELECT author_id FROM promos WHERE id = ?", req.Id).Scan(&authorId)
 	if err != nil {
@@ -68,16 +68,16 @@ func (s *promoServer) UpdatePromo(ctx context.Context, req *proto.UpdatePromoReq
 
 	updateTime := time.Now()
 	if err := s.session.Query(
-		"UPDATE promos SET title = ?, description = ?, discount_rate = ?, update_date = ? WHERE id = ?",
+		"UPDATE promos SET title = ?, description = ?, discount_rate = ?, update_date = ?, promo_code = ? WHERE id = ?",
 		req.Title, req.Description, req.DiscountRate, updateTime, req.Id,
 	).Exec(); err != nil {
 		return nil, err
 	}
 
-	return s.GetPromo(ctx, &proto.GetPromoRequest{Id: req.Id})
+	return s.GetPromo(ctx, &protopromo.GetPromoRequest{Id: req.Id})
 }
 
-func (s *promoServer) DeletePromo(ctx context.Context, req *proto.DeletePromoRequest) (*empty.Empty, error) {
+func (s *promoServer) DeletePromo(ctx context.Context, req *protopromo.DeletePromoRequest) (*empty.Empty, error) {
 	var authorId string
 	err := s.session.Query("SELECT author_id FROM promos WHERE id = ?", req.Id).Scan(&authorId)
 	if err != nil {
@@ -95,11 +95,11 @@ func (s *promoServer) DeletePromo(ctx context.Context, req *proto.DeletePromoReq
 	return &empty.Empty{}, nil
 }
 
-func (s *promoServer) ListPromos(ctx context.Context, req *proto.ListPromosRequest) (*proto.ListPromosResponse, error) {
-	var promos []*proto.Promo
+func (s *promoServer) ListPromos(ctx context.Context, req *protopromo.ListPromosRequest) (*protopromo.ListPromosResponse, error) {
+	var promos []*protopromo.Promo
 	iter := s.session.Query("SELECT id, title, description, author_id, discount_rate, promo_code, creation_date, update_date FROM promos").Iter()
 	for {
-		var p proto.Promo
+		var p protopromo.Promo
 		var creationDate, updateDate time.Time
 		if !iter.Scan(&p.Id, &p.Title, &p.Description, &p.AuthorId, &p.DiscountRate, &p.PromoCode, &creationDate, &updateDate) {
 			break
@@ -111,7 +111,86 @@ func (s *promoServer) ListPromos(ctx context.Context, req *proto.ListPromosReque
 	if err := iter.Close(); err != nil {
 		return nil, err
 	}
-	return &proto.ListPromosResponse{Promos: promos}, nil
+	return &protopromo.ListPromosResponse{Promos: promos}, nil
+}
+
+func (s *promoServer) AddComment(ctx context.Context, req *protopromo.AddCommentRequest) (*protopromo.Comment, error) {
+	id := gocql.TimeUUID()
+	creationTime := time.Now()
+
+	if err := s.session.Query(
+		"INSERT INTO comments (id, promo_id, author_id, content, creation_date) VALUES (?, ?, ?, ?, ?)",
+		id, req.PromoId, req.AuthorId, req.Content, creationTime,
+	).Exec(); err != nil {
+		return nil, err
+	}
+
+	return &protopromo.Comment{
+		Id:           id.String(),
+		PromoId:      req.PromoId,
+		AuthorId:     req.AuthorId,
+		Content:      req.Content,
+		CreationDate: timestamppb.New(creationTime),
+	}, nil
+}
+
+func (s *promoServer) GetComment(ctx context.Context, req *protopromo.GetCommentRequest) (*protopromo.Comment, error) {
+	var comment protopromo.Comment
+	var creationDate time.Time
+
+	if err := s.session.Query(
+		"SELECT id, promo_id, author_id, content, creation_date FROM comments WHERE id = ?",
+		req.CommentId,
+	).Scan(&comment.Id, &comment.PromoId, &comment.AuthorId, &comment.Content, &creationDate); err != nil {
+		return nil, err
+	}
+
+	comment.CreationDate = timestamppb.New(creationDate)
+	return &comment, nil
+}
+
+func (s *promoServer) ListComments(ctx context.Context, req *protopromo.ListCommentsRequest) (*protopromo.ListCommentsResponse, error) {
+	var comments []*protopromo.Comment
+	var pageState []byte
+
+	for i := 0; i < int(req.Page); i++ {
+		iter := s.session.Query(
+			"SELECT id, promo_id, author_id, content, creation_date FROM comments WHERE promo_id = ?",
+			req.PromoId,
+		).PageSize(int(req.PageSize)).PageState(pageState).Iter()
+
+		for iter.Scan(new(string), new(string), new(string), new(string), new(time.Time)) {
+		}
+		if err := iter.Close(); err != nil {
+			return nil, err
+		}
+		pageState = iter.PageState()
+	}
+
+	iter := s.session.Query(
+		"SELECT id, promo_id, author_id, content, creation_date FROM comments WHERE promo_id = ?",
+		req.PromoId,
+	).PageSize(int(req.PageSize)).PageState(pageState).Iter()
+
+	var creationDate time.Time
+	var c protopromo.Comment
+	for iter.Scan(&c.Id, &c.PromoId, &c.AuthorId, &c.Content, &creationDate) {
+		c.CreationDate = timestamppb.New(creationDate)
+		comments = append(comments, &protopromo.Comment{
+			Id:           c.Id,
+			PromoId:      c.PromoId,
+			AuthorId:     c.AuthorId,
+			Content:      c.Content,
+			CreationDate: c.CreationDate,
+		})
+	}
+	if err := iter.Close(); err != nil {
+		return nil, err
+	}
+
+	return &protopromo.ListCommentsResponse{
+		Comments: comments,
+	}, nil
 }
 
 func connectToCassandra(host string, port int, keyspace string) *gocql.Session {
@@ -124,7 +203,7 @@ func connectToCassandra(host string, port int, keyspace string) *gocql.Session {
 	var session *gocql.Session
 	var err error
 
-	maxRetries := 10
+	maxRetries := 15
 	retryCount := 0
 
 	for retryCount < maxRetries {
@@ -196,7 +275,7 @@ func connectToCassandra(host string, port int, keyspace string) *gocql.Session {
 }
 
 func initializeDatabase(session *gocql.Session) {
-	query := `CREATE TABLE IF NOT EXISTS promos (
+	queries := []string{`CREATE TABLE IF NOT EXISTS promos (
 		id UUID PRIMARY KEY,
 		title TEXT,
 		description TEXT,
@@ -205,9 +284,21 @@ func initializeDatabase(session *gocql.Session) {
 		promo_code TEXT,
 		creation_date TIMESTAMP,
 		update_date TIMESTAMP
-	)`
-	if err := session.Query(query).Exec(); err != nil {
-		log.Fatal("Failed to initialize database:", err)
+	)`,
+		`CREATE TABLE IF NOT EXISTS comments (
+		id UUID,
+		promo_id UUID,
+		author_id UUID,
+		content TEXT,
+		creation_date TIMESTAMP,
+		PRIMARY KEY (promo_id, id)
+	)`,
+		`CREATE INDEX IF NOT EXISTS comments_id_idx ON comments (id)`}
+
+	for _, query := range queries {
+		if err := session.Query(query).Exec(); err != nil {
+			log.Fatal("Failed to initialize database:", err)
+		}
 	}
 }
 
@@ -218,7 +309,7 @@ func main() {
 	initializeDatabase(session)
 
 	server := grpc.NewServer()
-	proto.RegisterPromoServiceServer(server, &promoServer{session: session})
+	protopromo.RegisterPromoServiceServer(server, &promoServer{session: session})
 	reflection.Register(server)
 
 	listener, err := net.Listen("tcp", ":8083")
