@@ -19,7 +19,7 @@ func initKafka(brokerAddress string, topic string) {
 	}
 }
 
-func SendStat(eventType string, userID string, objectID string) {
+func SendStat(eventType string, userID string, objectID string, promoID string) {
 	if writer == nil {
 		initKafka("kafka:9092", "stats")
 	}
@@ -28,6 +28,7 @@ func SendStat(eventType string, userID string, objectID string) {
 		"event_type": eventType,
 		"user_id":    userID,
 		"object_id":  objectID,
+		"promo_id":   promoID,
 		"timestamp":  time.Now().Unix(),
 	}
 

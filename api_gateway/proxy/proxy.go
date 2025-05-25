@@ -4,6 +4,7 @@ import (
 	kafka "apigateway/kafka_producer"
 	protoauth "apigateway/proto/auth"
 	protopromo "apigateway/proto/promo"
+	protostats "apigateway/proto/stats"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -24,6 +25,7 @@ const targetBase = "http://nginx:8081"
 
 const promoServiceAddress = "loyalty-service:8083"
 const authServiceAddress = "auth-service:8080"
+const statsServiceAddress = "stats-service:8085"
 
 func grpcErrorToHTTP(err error) int {
 	st, ok := status.FromError(err)
@@ -58,6 +60,7 @@ func grpcErrorToHTTP(err error) int {
 type GrpcClients struct {
 	authClient  protoauth.AuthServiceClient
 	promoClient protopromo.PromoServiceClient
+	statsClient protostats.StatsServiceClient
 }
 
 func NewGrpcClients() (*GrpcClients, error) {
@@ -69,7 +72,15 @@ func NewGrpcClients() (*GrpcClients, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to promo service: %v", err)
 	}
-	return &GrpcClients{authClient: protoauth.NewAuthServiceClient(connAuth), promoClient: protopromo.NewPromoServiceClient(connPromo)}, nil
+	connStats, err := grpc.Dial(statsServiceAddress, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to stats service: %v", err)
+	}
+	return &GrpcClients{
+		authClient:  protoauth.NewAuthServiceClient(connAuth),
+		promoClient: protopromo.NewPromoServiceClient(connPromo),
+		statsClient: protostats.NewStatsServiceClient(connStats),
+	}, nil
 }
 
 func (g *GrpcClients) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +97,7 @@ func (g *GrpcClients) registerUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	kafka.SendStat("user_registered", user.Id, user.Login)
+	kafka.SendStat("user_registered", user.Id, user.Login, "")
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -300,7 +311,7 @@ func (g *GrpcClients) getPromoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kafka.SendStat("promo_viewed", userID, id)
+	kafka.SendStat("promo_viewed", userID, id, id)
 
 	json.NewEncoder(w).Encode(resp)
 }
@@ -392,7 +403,7 @@ func (g *GrpcClients) addCommentHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kafka.SendStat("comment_published", userID, resp.Id)
+	kafka.SendStat("comment_published", userID, resp.Id, resp.PromoId)
 
 	json.NewEncoder(w).Encode(resp)
 }
@@ -414,7 +425,29 @@ func (g *GrpcClients) getCommentHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kafka.SendStat("comment_viewed", userID, id)
+	kafka.SendStat("comment_viewed", userID, id, resp.PromoId)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) likeCommentHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := g.getUserID(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := g.promoClient.GetComment(ctx, &protopromo.GetCommentRequest{CommentId: id})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Comment not found: %v", err), http.StatusNotFound)
+		return
+	}
+
+	kafka.SendStat("comment_liked", userID, id, resp.PromoId)
 
 	json.NewEncoder(w).Encode(resp)
 }
@@ -450,7 +483,7 @@ func (g *GrpcClients) listCommentsHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	for _, comment := range resp.Comments {
-		kafka.SendStat("comment_viewed", userID, comment.Id)
+		kafka.SendStat("comment_viewed", userID, comment.Id, comment.PromoId)
 	}
 
 	json.NewEncoder(w).Encode(resp)
@@ -465,9 +498,69 @@ func (g *GrpcClients) promoOnClickHandler(w http.ResponseWriter, r *http.Request
 
 	promoId := chi.URLParam(r, "promo_id")
 
-	kafka.SendStat("promo_click", userID, promoId)
+	kafka.SendStat("promo_click", userID, promoId, promoId)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (g *GrpcClients) getPromoStatsHandler(w http.ResponseWriter, r *http.Request) {
+	promoID := chi.URLParam(r, "promo_id")
+	resp, err := g.statsClient.GetPromoStats(r.Context(), &protostats.PromoRequest{PromoId: promoID})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getPromoViewsHandler(w http.ResponseWriter, r *http.Request) {
+	promoID := chi.URLParam(r, "promo_id")
+	resp, err := g.statsClient.GetPromoViews(r.Context(), &protostats.PromoRequest{PromoId: promoID})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getPromoClicksHandler(w http.ResponseWriter, r *http.Request) {
+	promoID := chi.URLParam(r, "promo_id")
+	resp, err := g.statsClient.GetPromoClicks(r.Context(), &protostats.PromoRequest{PromoId: promoID})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getPromoCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	promoID := chi.URLParam(r, "promo_id")
+	resp, err := g.statsClient.GetPromoComments(r.Context(), &protostats.PromoRequest{PromoId: promoID})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getTopPromosHandler(w http.ResponseWriter, r *http.Request) {
+	metric := chi.URLParam(r, "metric")
+	resp, err := g.statsClient.GetTopPromos(r.Context(), &protostats.TopRequest{Metric: metric})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (g *GrpcClients) getTopUsersHandler(w http.ResponseWriter, r *http.Request) {
+	metric := chi.URLParam(r, "metric")
+	resp, err := g.statsClient.GetTopUsers(r.Context(), &protostats.TopRequest{Metric: metric})
+	if err != nil {
+		http.Error(w, err.Error(), grpcErrorToHTTP(err))
+		return
+	}
+	json.NewEncoder(w).Encode(resp)
 }
 
 func NewRouter(g *GrpcClients) *chi.Mux {
@@ -488,8 +581,16 @@ func NewRouter(g *GrpcClients) *chi.Mux {
 
 	r.Post("/api/v1/comments", g.addCommentHandler)
 	r.Get("/api/v1/comments/{id}", g.getCommentHandler)
+	r.Get("/api/v1/comments/on_like/{id}", g.likeCommentHandler)
 	r.Get("/api/v1/comments/promo/{promo_id}", g.listCommentsHandler)
 
 	r.Post("/api/v1/on_click/{promo_id}", g.promoOnClickHandler)
+
+	r.Get("/api/v1/stats/promo/{promo_id}/summary", g.getPromoStatsHandler)
+	r.Get("/api/v1/stats/promo/{promo_id}/views", g.getPromoViewsHandler)
+	r.Get("/api/v1/stats/promo/{promo_id}/clicks", g.getPromoClicksHandler)
+	r.Get("/api/v1/stats/promo/{promo_id}/comments", g.getPromoCommentsHandler)
+	r.Get("/api/v1/stats/top/promos/{metric}", g.getTopPromosHandler)
+	r.Get("/api/v1/stats/top/users/{metric}", g.getTopUsersHandler)
 	return r
 }
