@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+option go_package = "/home/user/loyalty-program-platform/stats";
+
+package stats;
+
+service StatsService {
+  rpc GetPromoStats(PromoRequest) returns (PromoStats);
+  rpc GetPromoViews(PromoRequest) returns (DailyStats);
+  rpc GetPromoClicks(PromoRequest) returns (DailyStats);
+  rpc GetPromoComments(PromoRequest) returns (DailyStats);
+  rpc GetTopPromos(TopRequest) returns (TopStats);
+  rpc GetTopUsers(TopRequest) returns (TopStats);
+}
+
+message PromoRequest {
+  string promo_id = 1;
+}
+
+message TopRequest {
+  string metric = 1; // "view", "click", "comment"
+}
+
+message PromoStats {
+  int32 views = 1;
+  int32 clicks = 2;
+  int32 comments = 3;
+}
+
+message DailyData {
+  string date = 1;
+  int32 count = 2;
+}
+
+message DailyStats {
+  repeated DailyData stats = 1;
+}
+
+message TopEntry {
+  string id = 1;
+  int32 count = 2;
+}
+
+message TopStats {
+  repeated TopEntry entries = 1;
+}

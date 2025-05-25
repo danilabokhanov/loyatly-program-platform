@@ -102,9 +102,20 @@ services:
     networks:
       - app-network
   stats-service:
+    depends_on:
+      - clickhouse
     build: ./stats_service
     ports:
       - "8085:8085"
+    networks:
+      - app-network
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.3
+    container_name: clickhouse
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./clickhouse_data:/var/lib/clickhouse
     networks:
       - app-network
 networks:
