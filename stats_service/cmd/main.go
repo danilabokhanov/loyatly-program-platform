@@ -16,7 +16,6 @@ func main() {
 		MinBytes:  10e3,
 		MaxBytes:  10e6,
 	})
-
 	log.Println("Stats service started. Listening for messages...")
 
 	for {
